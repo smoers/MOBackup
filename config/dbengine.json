@@ -1,0 +1,17 @@
+{
+  "dbengine": {
+    "command": [
+      "db\\MongoDB\\Server\\4.0\\bin\\mongod.exe",
+      "--dbpath",
+      "db\\data",
+      "--port",
+      "50000",
+      "--logpath",
+      "db\\log\\mongod.log"
+    ],
+    "user": {
+      "username": "mobackup",
+      "password": "uLCz3W{]&Lq8tRk_"
+    }
+  }
+}

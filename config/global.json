@@ -1,0 +1,8 @@
+{
+  "global": {
+    "service": {
+      "pid": 147,
+      "name": "MOConsult"
+    }
+  }
+}
