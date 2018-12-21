@@ -20,13 +20,17 @@
 
 package be.mo.consult.controller.db;
 
+import be.mo.consult.model.exceptions.ConnectorDatabaseNotLoadedException;
+import be.mo.consult.model.exceptions.ErrorCode;
 import be.mo.consult.model.listeners.MongoConnectorServerMonitorListener;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 /**
@@ -38,6 +42,7 @@ public class Connector {
     private String host;
     private int port;
     private MongoClient mongoClient;
+    private HashMap<String, MongoDatabase> databaseList = new HashMap<String, MongoDatabase>();
 
     /**
      * Cosntructeur
@@ -76,7 +81,50 @@ public class Connector {
 
     }
 
+    /**
+     * Permet la création d'une database même si mongo le fait lorsque elle n'existe pas
+     * @param name
+     * @return
+     */
+    public MongoDatabase createDatabase(String name){
+        return loadDatabase(name);
+    }
 
+    /**
+     * Charge la database object dans le tableau
+     * @param name
+     * @return
+     */
+    public MongoDatabase loadDatabase(String name){
+        MongoDatabase mongoDatabase = mongoClient.getDatabase(name);
+        databaseList.put(name,mongoDatabase);
+        return mongoDatabase;
+    }
+
+    /**
+     * Retourne une database si elle a été chargée au préalable
+     * Si non lève une exception
+     * @param databaseName
+     * @return
+     * @throws ConnectorDatabaseNotLoadedException
+     */
+    public MongoDatabase getDatabase(String databaseName) throws ConnectorDatabaseNotLoadedException {
+        if(isLoaded(databaseName)) {
+            return databaseList.get(databaseName);
+        } else {
+            throw new ConnectorDatabaseNotLoadedException(ErrorCode.CONNECTOR_DATABASE_NOT_LOADED.getMessage(),ErrorCode.CONNECTOR_DATABASE_NOT_LOADED);
+        }
+    }
+
+    /**
+     * crée une collection
+     * @param databaseName
+     * @param collectionName
+     * @throws ConnectorDatabaseNotLoadedException
+     */
+    public void createCollection(String databaseName, String collectionName) throws ConnectorDatabaseNotLoadedException {
+            getDatabase(databaseName).createCollection(collectionName);
+    }
 
     /**
      * Retourne le client
@@ -90,5 +138,10 @@ public class Connector {
      */
     public UUID getKeyOwner() {
         return keyOwner;
+    }
+
+
+    protected boolean isLoaded(String databaseName){
+        return !databaseList.isEmpty() && databaseList.containsKey(databaseName);
     }
 }

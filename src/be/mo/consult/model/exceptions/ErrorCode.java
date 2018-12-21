@@ -27,7 +27,9 @@ public enum ErrorCode {
 
     DBENGINE_BUILDER_KEY_NOT_EXIST(3001, "This key is not exist into the collection DBEngine"),
 
-    MASTER_THREAD_PROBLEN(4001, "A problem is occurred in the main Thread");
+    MASTER_THREAD_PROBLEN(4001, "A problem is occurred in the main Thread"),
+
+    CONNECTOR_DATABASE_NOT_LOADED(5001,"The database requested is not loaded in the connector instance");
 
     private int errorCode;
     private String message;
