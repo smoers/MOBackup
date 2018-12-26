@@ -24,6 +24,8 @@ import be.mo.consult.controller.db.Connector;
 import be.mo.consult.controller.db.DbEngine;
 import be.mo.consult.controller.db.DbEngineBuilder;
 import be.mo.consult.controller.db.interfaces.User;
+import be.mo.consult.controller.db.mongo.MongoCollectionExtended;
+import be.mo.consult.controller.db.mongo.MongoDatabaseExtended;
 import be.mo.consult.controller.db.mongo.MongoUser;
 import be.mo.consult.controller.logger.Loggers;
 import be.mo.consult.model.exceptions.ConfigurationFormatNotSupportedException;
@@ -101,8 +103,18 @@ public class Launcher {
             }
         }
         loggers.info(loggers.messageFactory.newMessage("DB Engine loaded"));
-        _connector.isDatabaseExist("Tasks");
-
+        MongoDatabaseExtended mongoDatabaseExtended = new MongoDatabaseExtended("mobackup");
+        MongoCollectionExtended mongoCollectionExtended = new MongoCollectionExtended("tasks");
+        mongoDatabaseExtended = _connector.getDatabase(mongoDatabaseExtended);
+        if(!mongoDatabaseExtended.isExist()){
+            mongoDatabaseExtended = _connector.createDatabase(mongoDatabaseExtended);
+        }
+        System.out.println(mongoDatabaseExtended.getDatabase().getName());
+        mongoCollectionExtended = mongoDatabaseExtended.getCollection(mongoCollectionExtended);
+        if(!mongoCollectionExtended.isExist()){
+            mongoCollectionExtended = mongoDatabaseExtended.createCollection(mongoCollectionExtended);
+        }
+        System.out.println(mongoCollectionExtended.count());
     }
 
     private void destroy() throws DbEngineBuilderKeyNotExistException {

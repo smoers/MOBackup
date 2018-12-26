@@ -15,5 +15,8 @@
     <orderEntry type="library" name="mongodb-driver-core-3.9.1" level="project" />
     <orderEntry type="library" name="mongodb-driver-3.9.1" level="project" />
     <orderEntry type="library" name="bson-3.9.1" level="project" />
+    <orderEntry type="library" name="jongo-1.4.0" level="project" />
+    <orderEntry type="library" name="bson4jackson-2.9.2" level="project" />
+    <orderEntry type="library" name="jackson-core-2.9.8" level="project" />
   </component>
 </module>

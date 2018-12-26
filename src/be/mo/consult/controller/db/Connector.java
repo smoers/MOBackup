@@ -20,8 +20,7 @@
 
 package be.mo.consult.controller.db;
 
-import be.mo.consult.model.exceptions.ConnectorDatabaseNotLoadedException;
-import be.mo.consult.model.exceptions.ErrorCode;
+import be.mo.consult.controller.db.mongo.MongoDatabaseExtended;
 import be.mo.consult.model.listeners.MongoConnectorServerMonitorListener;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -62,68 +61,22 @@ public class Connector {
         mongoClient = new MongoClient(new ServerAddress(host, port), mongoClientOptions);
     }
 
-    /**
-     * Détermine si une DB existe
-     * @param databaseName
-     * @return
-     */
-    public boolean isDatabaseExist(String databaseName){
+    public MongoDatabaseExtended getDatabase(MongoDatabaseExtended mongoDatabaseExtended){
+        if(isDatabaseExist(mongoDatabaseExtended.getDatabaseName())){
+            mongoDatabaseExtended.setExist(true);
+            mongoDatabaseExtended.setDatabase(mongoClient.getDatabase(mongoDatabaseExtended.getDatabaseName()));
 
-        boolean isExist = false;
-        MongoCursor<Document> mongoCursor = mongoClient.listDatabases().iterator();
-        while (mongoCursor.hasNext()) {
-            Document document = mongoCursor.next();
-            if(document.containsKey("name")){
-                if(document.getString("name").equalsIgnoreCase(databaseName)) { isExist = true; break; }
-            }
         }
-        return isExist;
-
+        return mongoDatabaseExtended;
     }
 
-    /**
-     * Permet la création d'une database même si mongo le fait lorsque elle n'existe pas
-     * @param name
-     * @return
-     */
-    public MongoDatabase createDatabase(String name){
-        return loadDatabase(name);
-    }
-
-    /**
-     * Charge la database object dans le tableau
-     * @param name
-     * @return
-     */
-    public MongoDatabase loadDatabase(String name){
-        MongoDatabase mongoDatabase = mongoClient.getDatabase(name);
-        databaseList.put(name,mongoDatabase);
-        return mongoDatabase;
-    }
-
-    /**
-     * Retourne une database si elle a été chargée au préalable
-     * Si non lève une exception
-     * @param databaseName
-     * @return
-     * @throws ConnectorDatabaseNotLoadedException
-     */
-    public MongoDatabase getDatabase(String databaseName) throws ConnectorDatabaseNotLoadedException {
-        if(isLoaded(databaseName)) {
-            return databaseList.get(databaseName);
-        } else {
-            throw new ConnectorDatabaseNotLoadedException(ErrorCode.CONNECTOR_DATABASE_NOT_LOADED.getMessage(),ErrorCode.CONNECTOR_DATABASE_NOT_LOADED);
+    public MongoDatabaseExtended createDatabase(MongoDatabaseExtended mongoDatabaseExtended){
+        if(!isDatabaseExist(mongoDatabaseExtended.getDatabaseName())){
+            System.out.println("Created");
+            mongoDatabaseExtended.setExist(true);
+            mongoDatabaseExtended.setDatabase(mongoClient.getDatabase(mongoDatabaseExtended.getDatabaseName()));;
         }
-    }
-
-    /**
-     * crée une collection
-     * @param databaseName
-     * @param collectionName
-     * @throws ConnectorDatabaseNotLoadedException
-     */
-    public void createCollection(String databaseName, String collectionName) throws ConnectorDatabaseNotLoadedException {
-            getDatabase(databaseName).createCollection(collectionName);
+        return mongoDatabaseExtended;
     }
 
     /**
@@ -140,8 +93,22 @@ public class Connector {
         return keyOwner;
     }
 
+    /**
+     * Détermine si une DB existe
+     * @param databaseName
+     * @return
+     */
+    protected boolean isDatabaseExist(String databaseName){
 
-    protected boolean isLoaded(String databaseName){
-        return !databaseList.isEmpty() && databaseList.containsKey(databaseName);
+        boolean isExist = false;
+        MongoCursor<Document> mongoCursor = mongoClient.listDatabases().iterator();
+        while (mongoCursor.hasNext()) {
+            Document document = mongoCursor.next();
+            if(document.containsKey("name")){
+                if(document.getString("name").equalsIgnoreCase(databaseName)) { isExist = true; break; }
+            }
+        }
+        return isExist;
+
     }
 }
