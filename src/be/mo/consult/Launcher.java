@@ -28,12 +28,17 @@ import be.mo.consult.controller.db.mongo.MongoCollectionExtended;
 import be.mo.consult.controller.db.mongo.MongoDatabaseExtended;
 import be.mo.consult.controller.db.mongo.MongoUser;
 import be.mo.consult.controller.logger.Loggers;
+import be.mo.consult.model.Task;
 import be.mo.consult.model.exceptions.ConfigurationFormatNotSupportedException;
 import be.mo.consult.model.exceptions.DbEngineBuilderKeyNotExistException;
 import be.mo.consult.model.exceptions.ErrorCode;
 import be.mo.consult.model.exceptions.TypeNotDefineConvertorException;
+import be.mo.consult.sandbox._CreateTask;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class Launcher {
@@ -103,18 +108,32 @@ public class Launcher {
             }
         }
         loggers.info(loggers.messageFactory.newMessage("DB Engine loaded"));
+
+        //Load database
         MongoDatabaseExtended mongoDatabaseExtended = new MongoDatabaseExtended("mobackup");
-        MongoCollectionExtended mongoCollectionExtended = new MongoCollectionExtended("tasks");
+        MongoCollectionExtended<Task> mongoCollectionExtended = new MongoCollectionExtended<Task>("tasks");
+        loggers.info(loggers.messageFactory.newMessage("Loading Database"));
         mongoDatabaseExtended = _connector.getDatabase(mongoDatabaseExtended);
         if(!mongoDatabaseExtended.isExist()){
             mongoDatabaseExtended = _connector.createDatabase(mongoDatabaseExtended);
         }
-        System.out.println(mongoDatabaseExtended.getDatabase().getName());
+        loggers.info(loggers.messageFactory.newMessage("Loading Collection"));
         mongoCollectionExtended = mongoDatabaseExtended.getCollection(mongoCollectionExtended);
         if(!mongoCollectionExtended.isExist()){
             mongoCollectionExtended = mongoDatabaseExtended.createCollection(mongoCollectionExtended);
         }
-        System.out.println(mongoCollectionExtended.count());
+
+        //init
+        ArrayList<Task> tasks = mongoCollectionExtended.getObjectList();
+        //GsonBuilder builder = new GsonBuilder();
+        //Gson gson = builder.create();
+        //mongoCollectionExtended.save(json);
+        //System.out.println(gson.fromJson(json, Task.class).getTimeTables().size());
+
+        for(Task task : tasks){
+            System.out.println(task.getUuid());
+        }
+
     }
 
     private void destroy() throws DbEngineBuilderKeyNotExistException {

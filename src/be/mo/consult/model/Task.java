@@ -1,6 +1,7 @@
 package be.mo.consult.model;
 
 import be.mo.consult.model.utils.TaskType;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -11,11 +12,21 @@ public class Task implements TaskInterface {
     private TaskType taskType;
     private ArrayList operations;
     private ArrayList<TimeTable> timeTables;
+    private ObjectId _id;
 
     public Task(TaskType taskType) {
         this.taskType = taskType;
         this.operations = new ArrayList();
         this.timeTables = new ArrayList<TimeTable>();
+        this.uuid = UUID.randomUUID();
+    }
+
+    public ObjectId get_id() {
+        return _id;
+    }
+
+    public void set_id(ObjectId _id) {
+        this._id = _id;
     }
 
     @Override

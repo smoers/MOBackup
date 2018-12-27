@@ -65,7 +65,6 @@ public class Connector {
         if(isDatabaseExist(mongoDatabaseExtended.getDatabaseName())){
             mongoDatabaseExtended.setExist(true);
             mongoDatabaseExtended.setDatabase(mongoClient.getDatabase(mongoDatabaseExtended.getDatabaseName()));
-
         }
         return mongoDatabaseExtended;
     }
