@@ -23,22 +23,21 @@ import be.mo.consult.controller.configuration.ConfigurationBuilder;
 import be.mo.consult.controller.db.Connector;
 import be.mo.consult.controller.db.DbEngine;
 import be.mo.consult.controller.db.DbEngineBuilder;
-import be.mo.consult.controller.db.interfaces.User;
 import be.mo.consult.controller.db.mongo.MongoCollectionExtended;
 import be.mo.consult.controller.db.mongo.MongoDatabaseExtended;
+import be.mo.consult.controller.task.TasksList;
 import be.mo.consult.controller.db.mongo.MongoUser;
 import be.mo.consult.controller.logger.Loggers;
+import be.mo.consult.controller.scheduler.DbSchedulerTask;
+import be.mo.consult.controller.scheduler.Scheduler;
 import be.mo.consult.model.Task;
 import be.mo.consult.model.exceptions.ConfigurationFormatNotSupportedException;
 import be.mo.consult.model.exceptions.DbEngineBuilderKeyNotExistException;
 import be.mo.consult.model.exceptions.ErrorCode;
 import be.mo.consult.model.exceptions.TypeNotDefineConvertorException;
-import be.mo.consult.sandbox._CreateTask;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import be.mo.consult.tools.DateCalculator;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.UUID;
 
 public class Launcher {
@@ -99,6 +98,7 @@ public class Launcher {
         //Obtient le connecteur
         Connector _connector = _dbEngine.getConnector();
         loggers.info(loggers.messageFactory.newMessage("The connector instance loaded"));
+        //
         while (_dbEngine.ping() == false){
             loggers.info(loggers.messageFactory.newMessage("Waiting DB Engine loaded ... (1s)"));
             try {
@@ -111,7 +111,7 @@ public class Launcher {
 
         //Load database
         MongoDatabaseExtended mongoDatabaseExtended = new MongoDatabaseExtended("mobackup");
-        MongoCollectionExtended<Task> mongoCollectionExtended = new MongoCollectionExtended<Task>("tasks");
+        MongoCollectionExtended<Task> mongoCollectionExtended = new MongoCollectionExtended<Task>("tasks", Task.class);
         loggers.info(loggers.messageFactory.newMessage("Loading Database"));
         mongoDatabaseExtended = _connector.getDatabase(mongoDatabaseExtended);
         if(!mongoDatabaseExtended.isExist()){
@@ -123,16 +123,13 @@ public class Launcher {
             mongoCollectionExtended = mongoDatabaseExtended.createCollection(mongoCollectionExtended);
         }
 
-        //init
-        ArrayList<Task> tasks = mongoCollectionExtended.getObjectList();
-        //GsonBuilder builder = new GsonBuilder();
-        //Gson gson = builder.create();
-        //mongoCollectionExtended.save(json);
-        //System.out.println(gson.fromJson(json, Task.class).getTimeTables().size());
-
-        for(Task task : tasks){
-            System.out.println(task.getUuid());
-        }
+        //TaskList
+        loggers.info(loggers.messageFactory.newMessage("TaskList Instance"));
+        TasksList tasksList = TasksList.getInstance();
+        tasksList.setCollectionAccessor(mongoCollectionExtended);
+        //Charge le timer task de la db dans le timer principale
+        DbSchedulerTask dbSchedulerTask = new DbSchedulerTask(tasksList);
+        Scheduler.getInstance().getMainTimer().schedule(dbSchedulerTask, DateCalculator.getDateWithRoundSecond(),60000);
 
     }
 
@@ -140,5 +137,6 @@ public class Launcher {
         DbEngine _dbEngine = _dbEngineBuilder.getByKey(_dbEngineKey);
         _dbEngine.stop();
         loggers.info(loggers.messageFactory.newMessage("The DBEngine with ID " + _dbEngine.getKey().toString() + " stopped"));
+        Scheduler.getInstance().getMainTimer().cancel();
     }
 }

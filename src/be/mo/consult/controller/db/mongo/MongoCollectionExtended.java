@@ -19,6 +19,7 @@
 
 package be.mo.consult.controller.db.mongo;
 
+import be.mo.consult.controller.task.CollectionAccessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -34,19 +35,23 @@ import java.util.ArrayList;
  * Gestion de la collection Mongo
  * @param <T>
  */
-public class MongoCollectionExtended<T> {
+public class MongoCollectionExtended<T> implements CollectionAccessor<T> {
 
     private String collectionName;
     private MongoCollection mongoCollection = null;
     private boolean isExist = false;
+    private Type type;
 
     /**
      * Constructeur
      * @param collectionName
+     * @param type
      */
-    public MongoCollectionExtended(String collectionName) {
+    public MongoCollectionExtended(String collectionName, Type type) {
 
         this.collectionName = collectionName;
+        this.type = type;
+
     }
 
     /**
@@ -115,8 +120,6 @@ public class MongoCollectionExtended<T> {
     public ArrayList<T> getObjectList(){
         //retourne un tableau d'objets T
         ArrayList<T> list = new ArrayList<T>();
-        //Permet d'avoir la classe de l'object
-        Type type = new TypeToken<ArrayList<T>>(){}.getType();
         //GSON
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
@@ -125,12 +128,9 @@ public class MongoCollectionExtended<T> {
         FindIterable<Document> findIterable = mongoCollection.find();
         MongoCursor<Document> mongoCursor = findIterable.iterator();
         while (mongoCursor.hasNext()){
-            json = json + mongoCursor.next().toJson();
-            if (mongoCursor.hasNext()){ json = json + ","; }
+            json = mongoCursor.next().toJson();
+            list.add(gson.fromJson(json,type));
         }
-        json = "[" + json + "]";
-        System.out.println(json);
-        list = gson.fromJson(json,type);
         return list;
     }
 }
